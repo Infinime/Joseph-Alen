@@ -1,0 +1,4 @@
+schedulesbackup.zip
+.venv
+.vscode
+*__pycache__

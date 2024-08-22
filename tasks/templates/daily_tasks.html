@@ -1,0 +1,106 @@
+{% load custom_filters %}
+
+<div class="main-container">
+    <div class="heading p-3">
+        <div class="buttons" role="group" aria-label="Task actions">
+             <button type="button"  width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading me-1vw">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button type="button" width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading me-1vw">
+                <i class="bi bi-printer"></i>
+            </button>
+            <button type="button" width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading me-1vw">
+                <i class="bi bi-download"></i>
+            </button>
+            <button type="button" width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading">
+                <i class="bi bi-pencil"></i>
+            </button>
+        </div>
+        <div class="btn-group bg-light month-dropdown" id="month_dropdown1" role="group" aria-label="Basic radio toggle button group">
+            {%for month in months%}
+                <input type="radio" class="btn-check rounded-pill" name="months" data-month={{forloop.counter}} id="month{{forloop.counter}}1" onclick="updateDailyView(1, {{forloop.counter}}, selectedYear)" autocomplete="off" {% if forloop.counter == today.month %}checked{% endif %}>
+                <label class="btn btn-outline-primary" for="month{{forloop.counter}}1">{{month}}</label>
+            {%endfor%}
+        </div>
+        <div class="buttons" role="group" aria-label="Task actions">
+
+            <div class="dropdown d-inline-block me-1vw">
+                <button type="button" width="2.3vw" id="year_dropdown1" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-list-ul pe-1"></i>{{today.year}}
+                </button>
+                <ul class="dropdown-menu">
+                    {%for year in next_decade%}
+                        <li><a class="dropdown-item">{{year}}</a></li>
+                    {%endfor%}
+                </ul>
+            </div>
+            <button type="button" width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading me-1vw">
+                <i class="bi bi-pencil-square"></i>
+            </button>
+            <div class="dropdown">
+                <button type="button" class="btn btn-light btn-sm border-dark square-heading me-1vw dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-filter"></i>
+                </button>
+                <div class="dropdown-menu" id="filterDropdownDailyTasks">
+                    <h6 class="dropdown-header">Locations</h6>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="{{ location.id }}" id="location{{ location.id }}">
+                        <label class="form-check-label" for="location{{ location.id }}">
+                            {{ location.name }}
+                        </label>
+                    </div>
+                    <h6 class="dropdown-header">Task Names</h6>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="{{ task_name }}" id="task{{ forloop.counter }}">
+                        <label class="form-check-label" for="task{{ forloop.counter }}">
+                            {{ task_name }}
+                        </label>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <button class="btn btn-primary btn-sm mx-3" id="applyFiltersDailyTasks">Apply Filters</button>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <div class = "secondary mt-1 table-responsive" id = "daily_tasks1">
+        <table class="table table-bordered equal-width-columns">
+            <thead>
+              <tr>
+                {% for day in weekdays %}
+                    <th>{{ day }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+
+
+<div class="modal fade" id="moveTaskModal" tabindex="-1" aria-labelledby="moveTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="moveTaskModalLabel">Move Task</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" id="closeMoveModal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="moveTaskForm" method="post" action="{% url 'move_task' %}">
+                    {% csrf_token %}
+                    <label id="task_name" class="form-label"></label>
+                    <input type="number" class="form-control" name="task_id" readonly hidden id="task_id_input">
+                    <div>
+                        <label for="new_date" id="move_to_date" class="form-label">Move to Date:</label>
+                        <input type="date" class="form-control" id="new_date" name="new_date" required>
+                        <div class="alert alert-warning mt-2" role="alert">
+                            Warning: This action will affect all future occurrences of this task.
+                        </div>
+                    </div>
+                    <button type="submit" id="move-submit" class="btn btn-primary mt-3">Move Task</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+

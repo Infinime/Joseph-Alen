@@ -1,0 +1,717 @@
+[
+    {
+      "model": "tasks.task",
+      "pk": 2,
+      "fields": {
+        "name": "DC Circuit Grounds",
+        "frequency": 28,
+        "completion_hrs": 2,
+        "due_date": "2024-08-09",
+        "user": 1,
+        "location": 2
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 3,
+      "fields": {
+        "name": "DC Circuit Grounds",
+        "frequency": 28,
+        "completion_hrs": 2,
+        "due_date": "2024-09-02",
+        "user": 1,
+        "location": 4
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 4,
+      "fields": {
+        "name": "DC Circuit Grounds",
+        "frequency": 28,
+        "completion_hrs": 2,
+        "due_date": "2024-08-21",
+        "user": 1,
+        "location": 5
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 5,
+      "fields": {
+        "name": "DC Circuit Grounds",
+        "frequency": 28,
+        "completion_hrs": 2,
+        "due_date": "2024-08-15",
+        "user": 1,
+        "location": 7
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 6,
+      "fields": {
+        "name": "DC Circuit Grounds",
+        "frequency": 28,
+        "completion_hrs": 2,
+        "due_date": "2024-08-27",
+        "user": 1,
+        "location": 8
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 7,
+      "fields": {
+        "name": "DC Circuit Grounds",
+        "frequency": 28,
+        "completion_hrs": 2,
+        "due_date": "2024-08-27",
+        "user": 1,
+        "location": 9
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 8,
+      "fields": {
+        "name": "DC Circuit Grounds",
+        "frequency": 28,
+        "completion_hrs": 2,
+        "due_date": "2024-09-03",
+        "user": 1,
+        "location": 11
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 9,
+      "fields": {
+        "name": "DC Circuit Grounds",
+        "frequency": 28,
+        "completion_hrs": 2,
+        "due_date": "2024-09-04",
+        "user": 1,
+        "location": 13
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 10,
+      "fields": {
+        "name": "DC Circuit Grounds",
+        "frequency": 28,
+        "completion_hrs": 2,
+        "due_date": "2024-08-09",
+        "user": 1,
+        "location": 14
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 11,
+      "fields": {
+        "name": "Battery Test Records",
+        "frequency": 28,
+        "completion_hrs": 3,
+        "due_date": "2024-08-14",
+        "user": 1,
+        "location": 1
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 12,
+      "fields": {
+        "name": "Battery Test Records",
+        "frequency": 28,
+        "completion_hrs": 3,
+        "due_date": "2024-09-05",
+        "user": 1,
+        "location": 2
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 13,
+      "fields": {
+        "name": "Battery Test Records",
+        "frequency": 28,
+        "completion_hrs": 3,
+        "due_date": "2024-08-12",
+        "user": 1,
+        "location": 4
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 14,
+      "fields": {
+        "name": "Battery Test Records",
+        "frequency": 28,
+        "completion_hrs": 3,
+        "due_date": "2024-08-16",
+        "user": 1,
+        "location": 5
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 15,
+      "fields": {
+        "name": "Battery Test Records",
+        "frequency": 28,
+        "completion_hrs": 3,
+        "due_date": "2024-08-15",
+        "user": 1,
+        "location": 7
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 16,
+      "fields": {
+        "name": "Battery Test Records",
+        "frequency": 28,
+        "completion_hrs": 3,
+        "due_date": "2024-09-02",
+        "user": 1,
+        "location": 8
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 17,
+      "fields": {
+        "name": "Battery Test Records",
+        "frequency": 28,
+        "completion_hrs": 3,
+        "due_date": "2024-08-19",
+        "user": 1,
+        "location": 9
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 18,
+      "fields": {
+        "name": "Battery Test Records",
+        "frequency": 28,
+        "completion_hrs": 3,
+        "due_date": "2024-09-03",
+        "user": 1,
+        "location": 11
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 19,
+      "fields": {
+        "name": "Battery Test Records",
+        "frequency": 28,
+        "completion_hrs": 3,
+        "due_date": "2024-08-20",
+        "user": 1,
+        "location": 13
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 20,
+      "fields": {
+        "name": "Battery Test Records",
+        "frequency": 28,
+        "completion_hrs": 3,
+        "due_date": "2024-08-26",
+        "user": 1,
+        "location": 14
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 21,
+      "fields": {
+        "name": "Circuit Grounds",
+        "frequency": 91,
+        "completion_hrs": 2,
+        "due_date": "2024-08-21",
+        "user": 1,
+        "location": 1
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 22,
+      "fields": {
+        "name": "Circuit Grounds",
+        "frequency": 91,
+        "completion_hrs": 2,
+        "due_date": "2024-08-27",
+        "user": 1,
+        "location": 2
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 23,
+      "fields": {
+        "name": "Circuit Grounds",
+        "frequency": 91,
+        "completion_hrs": 2,
+        "due_date": "2024-10-29",
+        "user": 1,
+        "location": 4
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 24,
+      "fields": {
+        "name": "Circuit Grounds",
+        "frequency": 91,
+        "completion_hrs": 2,
+        "due_date": "2024-10-14",
+        "user": 1,
+        "location": 5
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 25,
+      "fields": {
+        "name": "Circuit Grounds",
+        "frequency": 91,
+        "completion_hrs": 2,
+        "due_date": "2024-09-16",
+        "user": 1,
+        "location": 7
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 26,
+      "fields": {
+        "name": "Circuit Grounds",
+        "frequency": 91,
+        "completion_hrs": 2,
+        "due_date": "2024-10-15",
+        "user": 1,
+        "location": 8
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 27,
+      "fields": {
+        "name": "Circuit Grounds",
+        "frequency": 91,
+        "completion_hrs": 2,
+        "due_date": "2024-09-16",
+        "user": 1,
+        "location": 9
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 28,
+      "fields": {
+        "name": "Circuit Grounds",
+        "frequency": 91,
+        "completion_hrs": 2,
+        "due_date": "2024-08-26",
+        "user": 1,
+        "location": 11
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 29,
+      "fields": {
+        "name": "Circuit Grounds",
+        "frequency": 91,
+        "completion_hrs": 2,
+        "due_date": "2024-08-20",
+        "user": 1,
+        "location": 13
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 30,
+      "fields": {
+        "name": "Circuit Grounds",
+        "frequency": 91,
+        "completion_hrs": 2,
+        "due_date": "2024-11-04",
+        "user": 1,
+        "location": 14
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 31,
+      "fields": {
+        "name": "Lamp Voltage (signal/crossing)",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2024-09-25",
+        "user": 1,
+        "location": 1
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 32,
+      "fields": {
+        "name": "Lamp Voltage (signal/crossing)",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2024-09-12",
+        "user": 1,
+        "location": 2
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 33,
+      "fields": {
+        "name": "Lamp Voltage (signal/crossing)",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2024-10-14",
+        "user": 1,
+        "location": 7
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 34,
+      "fields": {
+        "name": "Lamp Voltage (signal/crossing)",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2024-11-18",
+        "user": 1,
+        "location": 4
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 35,
+      "fields": {
+        "name": "Lamp Voltage (signal/crossing)",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2024-09-25",
+        "user": 1,
+        "location": 4
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 36,
+      "fields": {
+        "name": "Lamp Voltage (signal/crossing)",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2025-02-17",
+        "user": 1,
+        "location": 8
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 37,
+      "fields": {
+        "name": "Lamp Voltage (signal/crossing)",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2025-04-04",
+        "user": 1,
+        "location": 9
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 38,
+      "fields": {
+        "name": "Lamp Voltage (signal/crossing)",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2024-09-26",
+        "user": 1,
+        "location": 11
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 39,
+      "fields": {
+        "name": "Lamp Voltage (signal/crossing)",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2024-09-04",
+        "user": 1,
+        "location": 13
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 40,
+      "fields": {
+        "name": "Lamp Voltage (signal/crossing)",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2024-09-17",
+        "user": 1,
+        "location": 14
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 41,
+      "fields": {
+        "name": "Crossing obstruction",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2024-12-24",
+        "user": 1,
+        "location": 1
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 42,
+      "fields": {
+        "name": "Crossing obstruction",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2024-12-20",
+        "user": 1,
+        "location": 2
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 43,
+      "fields": {
+        "name": "Crossing obstruction",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2025-06-16",
+        "user": 1,
+        "location": 4
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 44,
+      "fields": {
+        "name": "Crossing obstruction",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2025-05-08",
+        "user": 1,
+        "location": 5
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 45,
+      "fields": {
+        "name": "Crossing obstruction",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2025-04-18",
+        "user": 1,
+        "location": 7
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 46,
+      "fields": {
+        "name": "Crossing obstruction",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2025-06-16",
+        "user": 1,
+        "location": 8
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 47,
+      "fields": {
+        "name": "Crossing obstruction",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2025-05-28",
+        "user": 1,
+        "location": 9
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 48,
+      "fields": {
+        "name": "Crossing obstruction",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2024-12-20",
+        "user": 1,
+        "location": 11
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 49,
+      "fields": {
+        "name": "Crossing obstruction",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2024-12-09",
+        "user": 1,
+        "location": 13
+      }
+    },
+    {
+      "model": "tasks.task",
+      "pk": 50,
+      "fields": {
+        "name": "Crossing obstruction",
+        "frequency": 365,
+        "completion_hrs": 3,
+        "due_date": "2024-12-02",
+        "user": 1,
+        "location": 14
+      }
+    },
+    {
+      "model": "tasks.location",
+      "pk": 1,
+      "fields": {
+        "name": "Kesler Rd",
+        "milepost": 34.29,
+        "user": 1
+      }
+    },
+    {
+      "model": "tasks.location",
+      "pk": 2,
+      "fields": {
+        "name": "Caravan Ave",
+        "milepost": 35.23,
+        "user": 1
+      }
+    },
+    {
+      "model": "tasks.location",
+      "pk": 3,
+      "fields": {
+        "name": "Glee Rd.",
+        "milepost": 54.61,
+        "user": 1
+      }
+    },
+    {
+      "model": "tasks.location",
+      "pk": 4,
+      "fields": {
+        "name": "Harrison Ave",
+        "milepost": 55.21,
+        "user": 1
+      }
+    },
+    {
+      "model": "tasks.location",
+      "pk": 5,
+      "fields": {
+        "name": "Shindler Rd",
+        "milepost": 55.97,
+        "user": 1
+      }
+    },
+    {
+      "model": "tasks.location",
+      "pk": 6,
+      "fields": {
+        "name": "Jefferson St.",
+        "milepost": 56.82,
+        "user": 1
+      }
+    },
+    {
+      "model": "tasks.location",
+      "pk": 7,
+      "fields": {
+        "name": "Carter Junction",
+        "milepost": 58.24,
+        "user": 1
+      }
+    },
+    {
+      "model": "tasks.location",
+      "pk": 8,
+      "fields": {
+        "name": "Garrison Blvd",
+        "milepost": 61.29,
+        "user": 1
+      }
+    },
+    {
+      "model": "tasks.location",
+      "pk": 9,
+      "fields": {
+        "name": "Chandler Ln",
+        "milepost": 61.86,
+        "user": 1
+      }
+    },
+    {
+      "model": "tasks.location",
+      "pk": 10,
+      "fields": {
+        "name": "Morrison Ln",
+        "milepost": 61.92,
+        "user": 1
+      }
+    },
+    {
+      "model": "tasks.location",
+      "pk": 11,
+      "fields": {
+        "name": "Patrick Ln",
+        "milepost": 62.03,
+        "user": 1
+      }
+    },
+    {
+      "model": "tasks.location",
+      "pk": 12,
+      "fields": {
+        "name": "South St",
+        "milepost": 62.18,
+        "user": 1
+      }
+    },
+    {
+      "model": "tasks.location",
+      "pk": 13,
+      "fields": {
+        "name": "Hoover Dr",
+        "milepost": 80.41,
+        "user": 1
+      }
+    },
+    {
+      "model": "tasks.location",
+      "pk": 14,
+      "fields": {
+        "name": "Powell St",
+        "milepost": 80.5,
+        "user": 1
+      }
+    }
+    ]
+    

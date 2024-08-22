@@ -1,0 +1,58 @@
+{% load custom_filters %}
+
+<div class="main-container">
+    <div class="heading p-3">
+        <div class="buttons" role="group" aria-label="Task actions">
+             <button type="button"  width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading me-1vw">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button type="button" width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading me-1vw">
+                <i class="bi bi-printer"></i>
+            </button>
+            <button type="button" width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading me-1vw">
+                <i class="bi bi-download"></i>
+            </button>
+            <button type="button" width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading">
+                <i class="bi bi-pencil"></i>
+            </button>
+        </div>
+        <div class="btn-group bg-light month-dropdown" id="month_dropdown2" role="group" aria-label="Basic radio toggle button group">
+            {%for month in months%}
+                <input type="radio" class="btn-check rounded-pill" data-month={{forloop.counter}} name="months2" id="month{{forloop.counter}}2" onclick="updateDailyView(2, {{forloop.counter}}, selectedYear)" autocomplete="off" {% if forloop.counter == today.month %}checked{% elif forloop.counter <= today.month %}disabled{% endif %}>
+                <label class="btn btn-outline-primary" for="month{{forloop.counter}}2">{{month}}</label>
+            {%endfor%}
+        </div>
+        <div class="buttons" role="group" aria-label="Task actions">
+
+            <div class="dropdown d-inline-block me-1vw">
+                <button type="button" width="2.3vw" id="year_dropdown2" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-list-ul pe-1"></i>{{today.year}}
+                </button>
+                <ul class="dropdown-menu">
+                    {%for year in next_decade%}
+                        <li><a class="dropdown-item">{{year}}</a></li>
+                    {%endfor%}
+                </ul>
+            </div>
+            <button type="button" width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading me-1vw">
+                <i class="bi bi-pencil-square"></i>
+            </button>
+            <button type="button" width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading me-1vw">
+                <i class="bi bi-filter"></i>
+            </button>
+        </div>
+    </div>
+    <div class = "secondary mt-1 table-responsive" id = "daily_tasks2">
+        <table class="table table-bordered equal-width-columns">
+            <thead>
+              <tr>
+                {% for day in weekdays %}
+                    <th>{{ day }}</th>
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</div>
+

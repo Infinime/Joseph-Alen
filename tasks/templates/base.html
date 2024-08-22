@@ -1,0 +1,138 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Schedule Optimizer App{% endblock title %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="{% static 'styles.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+</head>
+<body class = "bg-light">
+    <div class="container-fluid" style="padding: 2vh;">
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid d-flex justify-content-between px-0 align-items-center">
+                <button class="btn btn-warning shadow back-button" style="height: 5.83vh; background-color: #EC8105;">
+                    <i class="bi bi-chevron-left"></i> Back To MRF Dashboard
+                </button>
+
+                <a class="navbar-brand mx-auto poppins-semibold">Schedule Optimizing</a>
+
+                <div class="d-flex align-items-center right-nav">
+                    <span class="me-2" style="color:#EC8105;">Hi, {{ user.username }}</span>
+                    <img src="{% if user.profile.image %}{{ user.profile.image.url }}{% else %}{% static 'user.webp' %}{% endif %}" alt="User Image" class="rounded-circle me-2" style="width: 40px; height: 40px;">
+
+                    <span><a href="{% url 'logout' %}">Logout</a></span>
+                </div>
+            </div>
+        </nav>
+
+        <main class="mt-4">
+            <div class="row align-items-center justify-content-between mb-2">
+                <div class="col-md-3">
+                    <div class="input-group border border-solid rounded-pill" hidden>
+                        <span class="input-group-text" id="basic-addon1">
+                            <i class="bi bi-search"></i>
+                        </span>
+                        <input type="text" class="form-control" placeholder="Search" aria-label="Search" aria-describedby="basic-addon1">
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <ul class="nav nav-tabs flex-nowrap justify-content-center" id="myTab" role="tablist">
+
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active  text-center align-center text-white poppins-bold" id="test-dates-tab" data-bs-toggle="tab" data-bs-target="#test-dates" type="button" role="tab" aria-controls="test-dates" aria-selected="false">TEST DATES</button>
+                        </li><li class="nav-item" role="presentation">
+                            <button class="nav-link text-center align-center text-white poppins-bold" id="daily-tasks-tab" data-bs-toggle="tab" data-bs-target="#daily-tasks" type="button" role="tab" aria-controls="daily-tasks" aria-selected="true">DAILY TASKS</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link  text-center align-center text-white poppins-bold" id="user-availability-tab" data-bs-toggle="tab" data-bs-target="#user-availability" type="button" role="tab" aria-controls="user-availability" aria-selected="false">USER AVAILABILITY</button>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <div id="current-date" style="float: right;">Today: {% now "l, F jS, Y" %}</div>                </div>            </div>
+            <div class="tab-content" id="myTabContent">
+                <div class="tab-pane fade show active" id="test-dates" role="tabpanel" aria-labelledby="test-dates-tab">
+                    {% include 'test_dates.html' %}
+                </div>
+                <div class="tab-pane fade" id="daily-tasks" role="tabpanel" aria-labelledby="daily-tasks-tab">
+                    {% include 'daily_tasks.html' %}
+                </div>
+                <div class="tab-pane fade" id="user-availability" role="tabpanel" aria-labelledby="user-availability-tab">
+                    {% include 'user_availability.html' %}
+                </div>
+            </div>
+            <div class="modal fade" id="addAvailabilityModal" tabindex="-1" aria-labelledby="addAvailabilityModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="addAvailabilityModalLabel">Add Availability</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="addAvailabilityForm" method="post" action="{%url 'add_availability'%}">
+                                {% csrf_token %}
+                                <div style="display: none;">
+                                    <label for="add_date" class="form-label">Date</label>
+                                    <input type="date" class="form-control" id="add_date" name="date" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="add_hours" class="form-label">Additional Number of Hours</label>
+                                    <input type="number" class="form-control" id="add_hours" name="hours" min="1" max="8" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="add_task_list" class="form-label"  id = "add_task_list_label" hidden>Which task(s) from later this week should be moved back to fill this space?</label>
+                                    <div class="form-check" id="add_task_list">
+                                        <!-- Checkboxes will be populated dynamically -->
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Save</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="removeAvailabilityModal" tabindex="-1" aria-labelledby="removeAvailabilityModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="removeAvailabilityModalLabel">Remove Availability</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="removeAvailabilityForm" method="post" action="{% url 'remove_availability' %}">
+                                {% csrf_token %}
+                                <div style="display: none;">
+                                    <label for="remove_date" class="form-label">Date</label>
+                                    <input type="date" class="form-control" id="remove_date" name="date" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="remove_hours" class="form-label">Number of Hours to Free Up</label>
+                                    <input type="number" class="form-control" id="remove_hours" name="hours" min="1" max="8" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="remove_task_list" class="form-label" id = "remove_task_list_label" hidden>Which task(s) should be moved to the next available day?</label>
+                                    <div class="form-check" id="remove_task_list">
+                                        <!-- Checkboxes will be populated dynamically -->
+                                    </div>
+                                </div>
+                                <button type="submit" id="remove-submit" class="btn btn-primary">Save</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    {% include "script.html" %}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

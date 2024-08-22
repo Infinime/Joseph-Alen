@@ -1,0 +1,156 @@
+{% load custom_filters %}
+
+<div class="main-container">
+    <div class="heading p-3">  
+        <div class="buttons col-4" role="group" aria-label="Task actions">
+             <button type="button"  width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading me-1vw">
+                <i class="bi bi-arrow-clockwise"></i>
+            </button>
+            <button type="button" width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading me-1vw">
+                <i class="bi bi-printer"></i>
+            </button>
+            <button type="button" width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading me-1vw">
+                <i class="bi bi-download"></i>
+            </button>
+            <button type="button" width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading">
+                <i class="bi bi-pencil"></i>
+            </button>
+        </div>  
+        <div class="buttons justify-content-center col-4">
+            <button type="button" hidden id="overview_button" class="btn btn-primary btn-light" onclick="back_to_overview()">
+                <i class="bi bi-chevron-left"></i> Back to Overview
+            </button>
+
+        </div>
+        <div class="buttons justify-content-end col-4" role="group" aria-label="Task actions">
+            <div class="dropdown me-1vw"  id = "sample_dropdown">
+                <button type="button" width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-list-ul pe-1"></i><span id="selected-view">Overview</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li><a class="dropdown-item" href="{% url 'home' sample=7 %}" onclick="updateSelectedView('Next 7 days')">Next 7 days</a></li>
+                    <li><a class="dropdown-item" href="{% url 'home' sample=14 %}" onclick="updateSelectedView('Next 14 days')">Next 2 weeks</a></li>
+                    <li><a class="dropdown-item" href="{% url 'home' sample=28 %}" onclick="updateSelectedView('Next 28 days')">Next 4 weeks</a></li>                </ul>
+            </div>
+            
+            <div class="dropdown me-1vw" hidden id = "year_dropdown">
+                <button type="button" width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-list-ul pe-1"></i> <span id="sel_year">{{today.year}}</span>
+                </button>
+                <ul class="dropdown-menu">
+                    {%for year in next_decade%}
+                        <li><a class="dropdown-item" onclick="fetchYearlyTasks({{year}}, selectedLocation)">{{year}}</a></li>    
+                    {%endfor%}           
+                </ul>
+            </div>
+            <script>
+                function updateSelectedView(text) {
+                    document.getElementById('selected-view').textContent = text;
+                }
+                
+                function setInitialView() {
+                    var sample = "{{ sample }}";
+                    var viewText;
+                    switch(sample) {
+                        case "7":
+                            viewText = "Next 7 days";
+                            break;
+                        case "14":
+                            viewText = "Next 14 days";
+                            break;
+                        case "28":
+                            viewText = "Next 28 days";
+                            break;
+                        default:
+                            viewText = "Overview";
+                    }
+                    updateSelectedView(viewText);
+                }
+
+
+                document.addEventListener('DOMContentLoaded', setInitialView);
+
+            </script>
+            <button type="button" width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading me-1vw">
+                <i class="bi bi-pencil-square"></i>
+            </button>
+            <button type="button" width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading me-1vw">
+                <i class="bi bi-filter"></i>
+            </button>
+        </div>
+    </div>
+    <div id = "test_dates" class = "secondary mt-1 table-responsive {%if sample == 28%}twentyeight{%endif%}">
+        <table class="table table-bordered">
+            <thead>
+              <tr>
+                <th rowspan="2"  class="me-1">Location Name</th>
+                {%if not sample == 7%}
+                <th rowspan="2">Next Upcoming Test</th>
+                {%endif%}
+                <th colspan={{sample}}>Upcoming Dates</th>
+                <th rowspan="2">View Full Schedule</th>
+              </tr>
+              <tr>
+                {% for date in dates %}
+                    {% if sample == 7 %}
+                        <th>{{ date|date:"l n/j/Y" }}</th>
+                    {% elif sample == 14 %}
+                        <th>{{ date|date:"l n/j/Y" }}</th>
+                    {% else %}
+                        <th>{{ date|date:"D n/j" }}</th>
+                    {% endif %}
+                {% endfor %}
+              </tr>
+            </thead>
+            <tbody>                        
+                
+                {% for location in user.locations.all %}
+                    {%if location.next_task%}
+                        <tr>
+                            <td>{{ location.name }}</td>
+                            {%if not sample == 7%}
+                            <td>{{ location.next_task.name }}</td>
+                            {%endif%}
+                            {% for day in dates_str %}
+                                {% with due_next_this_location=due_next|get_item:location.name %}
+                                {% if day in due_next_this_location%}
+                                    {% if sample == 7%}
+                                        {% with todays_tasks=due_next_this_location|get_item:day%}
+                                            <td>{{todays_tasks.0.name}}</td>
+                                        {% endwith %}
+                                    {% else %}
+                                        <td class="checks" style="color:">X</td>
+                                    {% endif %}
+                                {% else %}
+                                    <td></td>
+                                {% endif %}
+                                {% endwith %}
+                            {% endfor %}
+                            <td><i class="bi bi-box-arrow-up-right checks" onclick="fetchYearlyTasks({{ today.year }}, '{{ location.name }}')"></i></td>                        
+                        </tr>
+                    {%endif%}
+                    {% endfor %}
+
+            </tbody>
+          </table>
+    </div>
+    <div id="sub_container" hidden class="secondary mt-1 table-responsive">
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Location Name</th>
+                    <th>Test Number</th>
+                    <th>Test Name</th>
+                    <th>Test Interval</th>
+                    {% for month in months %}
+                    <th>{{month}}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+</div>
+

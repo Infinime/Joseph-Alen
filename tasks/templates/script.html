@@ -1,0 +1,784 @@
+
+<script>
+    // Add Availability
+    let year_view;
+    let lastFetchedYear;
+    function addAvailability(year, month, day) {
+        // Get the date from the datestr
+        let date = new Date(Date.UTC(year, month - 1, day));
+        date.setUTCHours(0, 0, 0, 0);
+        let datestr = date.toISOString().split('T')[0];
+        // Get the availability for this date
+        const availability = JSON.parse("{{ user.user_profile.availability|safe }}".replace(/'/g, '"'));
+        const availabilityDate = availability[datestr] || 0;
+        // Find out how much free time is on the chosen date
+
+        var daily_tasks = year_view[month][day]
+        var total_work_hours = 8;
+        var freeTime = 8 + availabilityDate
+        if (daily_tasks) {
+            Object.entries(daily_tasks).forEach(([key, task]) => {
+                freeTime -= task.time_taken;
+            });
+        }
+        if (freeTime >= 0) {
+            // populate the modal
+            const hoursForm = document.getElementById('addAvailabilityForm');
+            hoursForm.reset();
+            const hoursInput = document.getElementById('add_hours');
+            hoursForm.dataset.freetime = freeTime;
+            document.getElementById('addAvailabilityModalLabel').textContent = `Add Availability to ${datestr}:`;
+            document.getElementById('add_task_list').innerHTML = "";
+            document.getElementById('add_task_list_label').hidden = true;
+
+            // Ensure the date input is not readonly and set its value
+            const addDateInput = document.getElementById('add_date');
+            addDateInput.readOnly = false;
+            addDateInput.value = datestr;
+            addDateInput.readOnly = true;
+            hoursInput.max = 8-freeTime;
+        }
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        const hoursForm = document.getElementById('addAvailabilityForm');
+        const hoursInput = document.getElementById('add_hours');
+
+        const taskListSelect = document.getElementById('add_task_list');
+
+        hoursInput.addEventListener('input', function() {
+            const hours = this.value;
+            const freeTime = hoursForm.dataset.freetime;
+            var date = document.getElementById('add_date').value;
+            var bar_element = document.getElementById(`availability-bars-${date}`);
+
+            var total_work_hours = Array.from(bar_element.querySelectorAll(".bar.orange")).length || 0;
+
+
+            fetch(`/task_list_week/?date=${date}&hours=${hours}`)
+            .then(response => response.json())
+            .then(data => {
+                // returned data is a list of tasks in this format: {'name': task.name, 'time_taken': task.completion_hrs, "location": task.location.name,"due_date": task.due_date.strftime('%Y-%m-%d'),
+                // Update the task_list select options
+                taskListSelect.innerHTML = ''; // Clear existing options
+                // check the number of hours in the selected date
+                let b = false;
+
+                data.forEach(task => {
+                    if ((task.due_date >= date)) {
+                        const checkboxDiv = document.createElement('div');
+                        checkboxDiv.classList.add('form-check');
+                        if (!b) {
+                            b = true;
+                            // unset id = "remove_task_list_label" hidden
+                            document.getElementById('add_task_list_label').hidden = false;
+                        }
+
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.id = `task-${task.id}`;
+                        checkbox.name = 'task_list';
+                        checkbox.value = task.id;
+                        checkbox.dataset.time_taken = task.time_taken;
+                        checkbox.classList.add('form-check-input');
+                        checkboxDiv.appendChild(checkbox);
+                        if (task.time_taken - hours <= freeTime ) {
+                            checkbox.disabled = false;
+                        }
+                        else{
+                            checkbox.disabled = true;
+                        }
+
+                        const label = document.createElement('label');
+                        label.htmlFor = `task-${task.id}`;
+                        label.textContent = `${task.name} @ ${task.location} (${task.time_taken} hrs on ${task.due_date})`;
+                        label.classList.add('form-check-label');
+                        checkboxDiv.appendChild(label);
+
+                        taskListSelect.appendChild(checkboxDiv);
+                    }
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        });
+        // listener to check if the task_list select is changed, and remove every non selected element whose time_taken dataset attribute when summed with the selected would make the hours overflow past free_time
+        taskListSelect.addEventListener('input', function(event) {
+            const checkedBoxes = Array.from(taskListSelect.querySelectorAll('input[type="checkbox"]:checked'));
+            const selectedHours = checkedBoxes.reduce((total, checkbox) => total + parseInt(checkbox.dataset.time_taken), 0);
+            const freeTime = hoursForm.dataset.freetime;
+            let date = new Date(Date.UTC(year, month - 1, day));
+            date.setUTCHours(0, 0, 0, 0);
+            let datestr = date.toISOString().split('T')[0];
+            hours = document.getElementById('add_hours').value;
+
+            // Store the checked state of current checkboxes
+            const checkedState = {};
+            checkedBoxes.forEach(checkbox => {
+                checkedState[checkbox.value] = true;
+            });
+
+            fetch(`/task_list_week/?date=${datestr}`)
+            .then(response => response.json())
+            .then(data => {
+                // returned data is a list of tasks in this format: {'name': task.name, 'time_taken': task.completion_hrs, "location": task.location.name,"due_date": task.due_date.strftime('%Y-%m-%d'),
+                // Update the task_list checkboxes
+                taskListSelect.innerHTML = ''; // Clear existing checkboxes
+
+                data.forEach(task => {
+                    if (new Date(task.due_date) >= date) {
+                        const checkboxDiv = document.createElement('div');
+                        checkboxDiv.classList.add('form-check');
+
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.id = `task-${task.id}`;
+                        checkbox.name = 'task_list';
+                        checkbox.value = task.id;
+                        checkbox.dataset.time_taken = task.time_taken;
+                        checkbox.classList.add('form-check-input');
+
+                        // Restore checked state if it was checked before
+                        if (checkedState[task.id]) {
+                            checkbox.checked = true;
+                        } else if (parseFloat(task.time_taken) + parseFloat(selectedHours) <= parseFloat(freeTime) + parseFloat(hours)) {
+                            checkbox.disabled = false;
+                        } else {
+                            checkbox.disabled = true;
+                        }
+
+                        const label = document.createElement('label');
+                        label.htmlFor = `task-${task.id}`;
+                        label.textContent = `${task.name} @ ${task.location} (${task.time_taken} hrs on ${task.due_date})`;
+                        label.classList.add('form-check-label');
+
+                        checkboxDiv.appendChild(checkbox);
+                        checkboxDiv.appendChild(label);
+                        taskListSelect.appendChild(checkboxDiv);
+                    }
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        });
+
+    });
+    function removeAvailability(year, month, day) {
+        let date = new Date(Date.UTC(year, month - 1, day));
+        date.setUTCHours(0, 0, 0, 0);
+        const hoursInput = document.getElementById('remove_hours');
+        let datestr = date.toISOString().split('T')[0];
+        const availability = JSON.parse("{{ user.user_profile.availability|safe }}".replace(/'/g, '"'));
+        const availabilityDate = availability[datestr] || 0;
+        var daily_tasks = year_view[month][day];
+        var total_work_hours = 8;
+        var freeTime = total_work_hours + availabilityDate;
+        if (daily_tasks) {
+            Object.entries(daily_tasks).forEach(([key, task]) => {
+                freeTime -= task.time_taken;
+            });
+        }
+        const hoursForm = document.getElementById('removeAvailabilityForm');
+        hoursForm.reset();
+        hoursForm.dataset.freetime = freeTime;
+        document.getElementById('remove_date').value = datestr;
+        //hour input max should be same as free time
+        hoursInput.max = freeTime;
+        // pop up the modal
+        document.getElementById('removeAvailabilityModalLabel').textContent = `Remove Availability from ${datestr}:`;
+        document.getElementById('remove_task_list_label').hidden = true;
+        document.getElementById('remove_task_list').innerHTML = "";
+    }
+    document.addEventListener('DOMContentLoaded', function() {
+        const hoursForm = document.getElementById('removeAvailabilityForm');
+        const hoursInput = document.getElementById('remove_hours');
+        const taskListSelect = document.getElementById('remove_task_list');
+        hoursInput.addEventListener('input', function() {
+            const hours = parseFloat(this.value);
+            const freeTime = parseFloat(hoursForm.dataset.freetime);
+            const date = document.getElementById('remove_date').value;
+            const selectedDate = new Date(date);
+            const selectedMonth = selectedDate.getMonth() + 1;
+            const selectedDay = selectedDate.getDate();
+
+            taskListSelect.innerHTML = '';
+
+            const checkedState = {};
+            let selectedHours = 0;
+            Array.from(taskListSelect.querySelectorAll('input[type="checkbox"]')).forEach(checkbox => {
+                checkedState[checkbox.value] = checkbox.checked;
+                if (checkbox.checked) {
+                    selectedHours += parseInt(checkbox.dataset.time_taken);
+                }
+            });
+            freeT = freeTime + selectedHours - hours;
+            // console.log(freeT);
+            // Disable the submit button if there's not enough free time
+            document.getElementById('remove-submit').disabled = (0>=freeT || freeT >8);
+            if (year_view[selectedMonth] && year_view[selectedMonth][selectedDay]) {
+                const dailyTasks = year_view[selectedMonth][selectedDay];
+                var b = false;
+                Object.entries(dailyTasks).forEach(([key, task]) => {
+                    if (!b) {
+                        b = true;
+                        // unset id = "remove_task_list_label" hidden
+                        document.getElementById('remove_task_list_label').hidden = false;
+                    }
+                    const checkboxDiv = document.createElement('div');
+                    checkboxDiv.classList.add('form-check');
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `remove-task-${task.id}`;
+                    checkbox.name = 'remove_task_list';
+                    checkbox.value = task.id;
+                    checkbox.dataset.time_taken = task.time_taken;
+                    checkbox.classList.add('form-check-input');
+
+                    if (checkedState[task.id]) {
+                        checkbox.checked = true;
+                    }
+
+                    const label = document.createElement('label');
+                    label.htmlFor = `remove-task-${task.id}`;
+                    label.textContent = `${task.name} @ ${task.location} (${task.time_taken} hrs)`;
+                    label.classList.add('form-check-label');
+
+                    checkboxDiv.appendChild(checkbox);
+                    checkboxDiv.appendChild(label);
+                    taskListSelect.appendChild(checkboxDiv);
+                });
+            } else {
+                taskListSelect.innerHTML = '<p>No tasks found for the selected date.</p>';
+            }
+        });
+        taskListSelect.addEventListener('change', function(event) {
+            if (event.target.type !== 'checkbox') return;
+
+            const hours = document.getElementById('remove_hours').value;
+            const freeTime = parseFloat(hoursForm.dataset.freetime);
+            const date = document.getElementById('remove_date').value;
+            const selectedDate = new Date(date);
+            const selectedMonth = selectedDate.getMonth() + 1;
+            const selectedDay = selectedDate.getDate();
+
+            const checkedState = {};
+            let selectedHours = 0;
+            Array.from(taskListSelect.querySelectorAll('input[type="checkbox"]')).forEach(checkbox => {
+                checkedState[checkbox.value] = checkbox.checked;
+                if (checkbox.checked) {
+                    selectedHours += parseInt(checkbox.dataset.time_taken);
+                }
+            });
+            freeT = freeTime + selectedHours - hours;
+            // console.log(freeT);
+            // Disable the submit button if there's not enough free time
+            document.getElementById('remove-submit').disabled = (0>=freeT || freeT >8);
+
+            if (year_view[selectedMonth] && year_view[selectedMonth][selectedDay]) {
+                const dailyTasks = year_view[selectedMonth][selectedDay];
+
+                taskListSelect.innerHTML = '';
+                Object.entries(dailyTasks).forEach(([key, task]) => {
+                    const checkboxDiv = document.createElement('div');
+                    checkboxDiv.classList.add('form-check');
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.id = `remove-task-${task.id}`;
+                    checkbox.name = 'remove_task_list';
+                    checkbox.value = task.id;
+                    checkbox.dataset.time_taken = task.time_taken;
+                    checkbox.classList.add('form-check-input');
+
+                    if (checkedState[task.id]) {
+                        checkbox.checked = true;
+                    }
+
+                    const label = document.createElement('label');
+                    label.htmlFor = `remove-task-${task.id}`;
+                    label.textContent = `${task.name} @ ${task.location} (${task.time_taken} hrs)`;
+                    label.classList.add('form-check-label');
+
+                    checkboxDiv.appendChild(checkbox);
+                    checkboxDiv.appendChild(label);
+                    taskListSelect.appendChild(checkboxDiv);
+                });
+            } else {
+                taskListSelect.innerHTML = '<p>No tasks found for the selected date.</p>';
+            }
+        });
+    });
+
+    function updateDailyView(call, month = {{today.month}}, year = {{today.year}}, filter={}) {
+        if (year_view === undefined || year !== lastFetchedYear) {
+            fetchAllYearlyTasks(call, month, year, filter);
+        } else {
+            updateViewWithData(call, month, year);
+        }
+    }
+
+    function fetchAllYearlyTasks(call, month, year, filter) {
+        fetch('/yearly_tasks/all', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({"year": year, "filter":filter})
+        })
+        .then(response => response.json())
+        .then(data => {
+            year_view = data;
+            lastFetchedYear = year;
+            updateViewWithData(call, month, year);
+        });
+    }
+
+    function updateViewWithData(call, month, year) {
+        const subContainer = document.getElementById('daily_tasks' + call);
+        const tableBody = subContainer.querySelector('tbody');
+        tableBody.innerHTML = ''; // Clear existing Content
+
+        const daysInMonth = new Date(year, month, 0).getDate();
+        let dayOfWeek = new Date(year, month - 1, 1).getDay();
+        
+        if (call == 1) {
+            let row = document.createElement('tr');
+            row.style.height = '20vh';
+
+            // Add empty cells for days before the 1st of the month
+            for (let i = 0; i < dayOfWeek; i++) {
+                let cell = document.createElement('td');
+                row.appendChild(cell);
+            }
+
+            for (let day = 1; day <= daysInMonth; day++) {
+                let cell = document.createElement('td');
+                cell.textContent = day;
+
+                // Add tasks for this day
+                var daily_tasks = year_view[month][day]
+                if (daily_tasks) {
+                    var selectedLocation = ""
+                    var selectedMilepost = ""
+                    let taskList = document.createElement('ul');
+                    taskList.style.paddingLeft = '0';
+                    Object.entries(daily_tasks).forEach(([key, task]) => {
+                        // add kocation of task item if location is different from the previous one'
+                        if (selectedLocation!= task.location) {
+                            let drive_dist = Math.abs(task.milepost - selectedMilepost).toFixed(2);
+                            selectedMilepost = task.milepost;
+                            selectedLocation = task.location;
+                            let location = document.createElement('li');
+                            if (taskList.childElementCount == 0) {
+                                location.textContent = `Start at ${task.location}`;}
+                            else {
+                                location.textContent = `Drive to ${task.location} (${drive_dist} Mi.)`;}
+                            location.style.listStyleType = 'none';
+                            location.style.textAlign = 'left';
+                            location.style.fontWeight = 'bold';
+                            taskList.appendChild(location);
+                        }
+                        let taskItem = document.createElement('li');
+                        taskItem.textContent = `${task.name} (${task.time_taken} hrs)`;
+                        taskItem.style.listStyleType = 'none';
+                        taskItem.style.textAlign = 'left';
+                        taskItem.style.cursor = 'pointer';
+                        taskItem.dataset.bsToggle = "modal";
+                        taskItem.dataset.bsTarget = "#moveTaskModal";
+                        taskItem.onclick = function() {
+                            moveTask(task.id, task.name, `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`);
+                        };
+
+                        taskList.appendChild(taskItem);
+                    });
+                    cell.appendChild(taskList);
+                }
+
+                if (day == {{today.day}} && month == {{today.month}} && year == {{today.year}}) {
+                    cell.classList.add('bg-primary');
+                }
+
+                row.appendChild(cell);
+
+                if (dayOfWeek === 6 || day === daysInMonth) {
+                    tableBody.appendChild(row);
+                    row = document.createElement('tr');
+                }
+
+                dayOfWeek = (dayOfWeek + 1) % 7;
+            }
+
+            // Add empty cells for days after the last day of the month
+            while (dayOfWeek !== 0) {
+                let cell = document.createElement('td');
+                row.appendChild(cell);
+                dayOfWeek = (dayOfWeek + 1) % 7;
+            }
+
+            // Append the last row if it's not empty
+            if (row.cells.length > 0) {
+                tableBody.appendChild(row);
+            };
+
+        }
+        else {if (call == 2) {
+            let row = document.createElement('tr');
+            row.style.height = '20vh';
+            row.style.alignItems = 'center';
+            const monthDropdown = document.getElementById('month_dropdown2');
+            const monthOptions = monthDropdown.querySelectorAll('input');
+            if (year>{{today.year}}) {
+                // console.log(year);
+                monthOptions.forEach(option => {
+                    option.disabled = false;
+                });
+            }
+            else{
+                // Disable all months before the current one
+                monthOptions.forEach(option => {
+                    option.disabled = true;
+                    if ( option.getAttribute('data-month') >= {{today.month}}) {
+                        option.disabled = false;
+                    };
+                });
+            }
+            // Get the current date
+            let currentDate = new Date();
+            let currentWeekStart = new Date(currentDate.setDate(currentDate.getDate() - currentDate.getDay()));
+            currentWeekStart.setHours(0, 0, 0, 0);
+
+            // Calculate the first day of the month
+            let firstDayOfMonth = new Date(year, month - 1, 1);
+
+            // If the first day of the month is before the current week, adjust the start day
+            let startDay = 1;
+            if (firstDayOfMonth < currentWeekStart) {
+                startDay = currentWeekStart.getDate();
+                dayOfWeek = currentWeekStart.getDay();
+            }
+
+            // Add empty cells for days before the start day of the week
+            for (let i = 0; i < dayOfWeek; i++) {
+                let cell = document.createElement('td');
+                row.appendChild(cell);
+            }
+
+            for (let day = startDay; day <= daysInMonth; day++) {
+                let cell = document.createElement('td');
+                cell.textContent = day;
+
+                // Add workshifts for this day
+                var daily_tasks = year_view[month][day]
+                    var selectedLocation = ""
+                    var selectedMilepost = ""
+                    let taskList = document.createElement('ul');
+                    taskList.style.paddingLeft = '0';
+                    taskList.style.alignItems = 'left';
+                    var total_work_hours = 8;
+                if (daily_tasks) {
+                    Object.entries(daily_tasks).forEach(([key, task]) => {
+                        total_work_hours -= task.time_taken;
+                    });
+                }
+                availability = JSON.parse("{{ user.user_profile.availability|safe }}".replace(/'/g, '"'));
+                let dated = new Date(year, month - 1, day);
+
+                let date = new Date(Date.UTC(year, month - 1, day));
+                date.setUTCHours(0, 0, 0, 0);
+                let dateString = date.toISOString().split('T')[0];
+                let twh = availability[dateString] || 0; // Default to 0 if not set
+
+                total_work_hours += twh;
+                if (total_work_hours > 8) {
+                    total_work_hours = 8;
+                }
+                else if (total_work_hours < 0) {
+                    total_work_hours = 0;
+                }
+
+                let workshiftContainer = document.createElement('div');
+                today = new Date();
+                today.setUTCHours(0, 0, 0, 0);
+                dateString = date.toISOString().split('T')[0];
+                // if we're not in the past
+                if (date>=today) {
+                    workshiftContainer.className = 'workshift-container';
+
+                    workshiftContainer.innerHTML = `
+                        ${dayOfWeek !== 0 && dayOfWeek !== 6 ? `
+                        <p>Workshift Length: 8 hrs</p>
+                        <p>Make Availability</p>
+                        <div class="availability-controls">
+                            <div class="hour-adjustments d-flex justify-center">
+                                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addAvailabilityModal" id="plus${dateString}" onclick="addAvailability(year=${year}, month=${month}, day=${day})" >+</button>
+                                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#removeAvailabilityModal" id="minus${dateString}" onclick="removeAvailability(year=${year}, month=${month}, day=${day})">-</button>
+                            </div>
+                        </div>
+                        <div id="availability-bars-${dateString}">
+                            <p>Availability for Testing: ${total_work_hours} hrs</p>
+                            <div class="availability-bars">
+                                ${Array(total_work_hours).fill('<div class="bar orange"></div>').join('')}
+                                ${Array(8-total_work_hours).fill('<div class="bar grey"></div>').join('')}
+                            </div>
+                        </div>` : ''}
+                    `;}
+
+                    taskList.appendChild(workshiftContainer);
+                    cell.appendChild(taskList);
+
+                if (day == {{today.day}} && month == {{today.month}} && year == {{today.year}}) {
+                    cell.classList.add('bg-primary');
+                }
+
+                row.appendChild(cell);
+
+                if (dayOfWeek === 6 || day === daysInMonth) {
+                    tableBody.appendChild(row);
+                    row = document.createElement('tr');
+                    row.style.height = '20vh';
+                    row.style.alignItems = 'center';
+                }
+
+                dayOfWeek = (dayOfWeek + 1) % 7;
+            }
+
+            // Add empty cells for days after the last day of the month
+            while (dayOfWeek !== 0) {
+                let cell = document.createElement('td');
+                row.appendChild(cell);
+                dayOfWeek = (dayOfWeek + 1) % 7;
+            }
+
+            // Append the last row if it's not empty
+            if (row.cells.length > 0) {
+                tableBody.appendChild(row);
+            };
+        };}
+    }
+    let selectedYear = {{today.year}};
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const yearDropdown = document.getElementById('year_dropdown2');
+        const dropdownMenu = yearDropdown.nextElementSibling;
+        updateDailyView(2, {{today.month}}, selectedYear);
+
+        dropdownMenu.addEventListener('click', function(event) {
+            if (event.target.tagName === 'A') {
+                selectedYear = parseInt(event.target.textContent);
+                yearDropdown.innerHTML = `<i class="bi bi-list-ul pe-1"></i>${selectedYear}`;
+            }
+            const monthDropdown = document.getElementById('month_dropdown2');
+            const selectedMonthInput = monthDropdown.querySelector('.btn-check:checked');
+            const month = selectedMonthInput ? parseInt(selectedMonthInput.getAttribute('data-month')) : {{today.month}};   
+            updateDailyView(2, month, selectedYear);        
+        });
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        const yearDropdown = document.getElementById('year_dropdown1');
+        const dropdownMenu = yearDropdown.nextElementSibling;
+        updateDailyView(1, {{today.month}}, selectedYear);
+
+        dropdownMenu.addEventListener('click', function(event) {
+            if (event.target.tagName === 'A') {
+                selectedYear = parseInt(event.target.textContent);
+                yearDropdown.innerHTML = `<i class="bi bi-list-ul pe-1"></i>${selectedYear}`;
+            }
+            const monthDropdown = document.getElementById('month_dropdown1');
+            const selectedMonthInput =  monthDropdown.querySelector('.btn-check:checked');
+            const month = selectedMonthInput ? parseInt(selectedMonthInput.getAttribute('data-month')) : {{today.month}};            
+            updateDailyView(1, month, selectedYear);
+        });
+    });
+    function moveTask(taskId, taskName, currentDate) {
+        const moveTaskForm = document.getElementById('moveTaskForm');
+        const taskNameLabel = document.getElementById('task_name');
+        const taskIdInput = document.getElementById('task_id_input');
+        const newDateInput = document.getElementById('new_date');
+        const moveToDateLabel = document.getElementById('move_to_date');
+
+        taskNameLabel.textContent = `Move task: ${taskName}`;
+        taskIdInput.value = taskId;
+        newDateInput.value = new Date(currentDate);
+        // make sure newDateInput never allows past dates
+        newDateInput.min = new Date().toISOString().split('T')[0];
+        moveToDateLabel.textContent = `Current date: ${currentDate}. Move to:`;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const moveTaskForm = document.getElementById('moveTaskForm');
+        const newDateInput = document.getElementById('new_date');
+
+        moveTaskForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const taskId = document.getElementById('task_id_input').value;
+            const newDate = newDateInput.value;
+
+            fetch('{% url "move_task" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({
+                    task_id: taskId,
+                    new_date: newDate
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status == "success") {
+                    document.getElementById("closeMoveModal").click();
+                    // Refresh the calendar view or update the specific day
+                    updateDailyView(1, new Date(newDate).getMonth() + 1, new Date(newDate).getFullYear());
+                    updateDailyView(2, new Date(newDate).getMonth() + 1, new Date(newDate).getFullYear());
+                } else {
+                    alert('Failed to move task: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while moving the task.');
+            });
+        });
+        document.getElementById('applyFiltersDailyTasks').addEventListener('click', function() {
+            const filters = {
+                location__id__in: [],
+                name__in: []
+            };
+        
+            document.querySelectorAll('#filterDropdownDailyTasks input[type="checkbox"]:checked').forEach(checkbox => {
+                if (checkbox.id.startsWith('location')) {
+                    filters.locations.push(checkbox.value);
+                } else if (checkbox.id.startsWith('task')) {
+                    filters.task_names.push(checkbox.value);
+                }
+            });
+        
+            updateDailyView(1, {{today.month}}, {{today.year}}, JSON.stringify(filters));
+        });
+        
+    });
+    
+    function updateAvailability(hours, date){
+        fetch("/update_availability", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": '{{ csrf_token }}',
+            },
+            body: JSON.stringify({
+                hours: hours,
+                date: date
+            })
+        }).then(response => response.json()).then(data => {
+            if(data.success){
+                var bar_element = document.getElementById(`availability-bars-${date}`);
+                // total work hours: count the number of orange bars, add hours to it, and save as a var
+                var total_work_hours = Array.from(bar_element.querySelectorAll(".bar.orange")).length + hours;
+                if (total_work_hours == 8) {
+                    // disable the button that has the id plus${date}
+                    document.getElementById(`minus${date}`).disabled = false;
+                    document.getElementById(`plus${date}`).disabled = true;
+                }
+                else if (total_work_hours == 0) {
+                    // disable the button that has the id minus${date}
+                    document.getElementById(`plus${date}`).disabled = false;
+                    document.getElementById(`minus${date}`).disabled = true;
+                }
+                else{
+                    document.getElementById(`plus${date}`).disabled = false;
+                    document.getElementById(`minus${date}`).disabled = false;
+                }
+                if (total_work_hours > 8){
+                    total_work_hours = 8;
+                }
+                if (total_work_hours<0){
+                    total_work_hours = 0;
+                }
+                if (bar_element && 0<=total_work_hours<=8) {
+                    bar_element.innerHTML = `<p>Availability for Testing: ${total_work_hours} hrs</p>
+                    <div class="availability-bars">${Array(total_work_hours).fill('<div class="bar orange"></div>').join('')}
+                                    ${Array(8-total_work_hours).fill('<div class="bar grey"></div>').join('')}</div>`
+                } else {
+                    console.error(`Element with id 'availability-bars-${date}' not found`)
+                }
+                if (data.task_moved){
+                    date = new Date(date);
+                    updateDailyView(1, date.getMonth() + 1, date.getFullYear());
+                    updateDailyView(2, date.getMonth() + 1, date.getFullYear());                    }
+            }
+        })
+        .catch(error => console.log(error))
+    }
+    var selectedLocation = ""
+    function fetchYearlyTasks(year, locationId) {
+        fetch('/yearly_tasks/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({"year": year, "location_id": locationId})
+        })
+        .then(response => response.json())
+        .then(data => {
+            const subContainer = document.getElementById('sub_container');
+            const tableBody = subContainer.querySelector('tbody');
+            tableBody.innerHTML = `
+                    <td rowspan=${data.length +1}>${locationId}</td>`; // Clear existing content
+
+            for (const [taskName, taskData] of Object.entries(data.tasks)) {
+                const row = document.createElement('tr');
+                row.innerHTML += `
+                    <td>${Object.keys(data.tasks).indexOf(taskName) + 1}</td>
+                    <td>${taskName}</td>
+                    <td>${getInterval(taskData.frequency)}</td>
+                    ${getMonthCells(taskData.occurences, taskName)}
+                `;
+                
+                tableBody.appendChild(row);
+            }
+
+            // Show sub_container and hide test_dates
+            subContainer.hidden = false;
+            document.getElementById('test_dates').hidden = true;
+            document.getElementById('sample_dropdown').hidden = true;
+            document.getElementById('year_dropdown').hidden = false;
+            document.getElementById('sel_year').textContent = year;
+            document.getElementById('overview_button').hidden = false;
+        });
+        selectedLocation = locationId
+    }
+
+    function getInterval(frequency) {
+        switch(frequency) {
+            case 28: return "Monthly";
+            case 91: return "Quarterly";
+            case 365: return "Yearly";
+            default: return "";
+        }
+    }
+
+    function getMonthCells(occurences, taskName) {
+        const months = [1,2,3,4,5,6,7,8,9,10,11,12];
+        return months.map(month => 
+            `<td>${occurences[month][0] ? occurences[month][0] : ''}</td>`
+        ).join('');
+    }
+    function back_to_overview(){
+        const subContainer = document.getElementById('sub_container');
+        // hide sub_container and show test_dates
+        subContainer.hidden = true;
+        document.getElementById('test_dates').hidden = false;
+        
+        // hide overview_button if it exists
+        const overviewButton = document.getElementById('overview_button');
+        if (overviewButton) {
+            overviewButton.hidden = true;
+        }
+        
+        document.getElementById('sample_dropdown').hidden = false;
+        document.getElementById('year_dropdown').hidden = true;
+    }
+
+</script>
