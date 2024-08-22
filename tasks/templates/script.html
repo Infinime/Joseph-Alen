@@ -307,8 +307,8 @@
         });
     });
 
-    function updateDailyView(call, month = {{today.month}}, year = {{today.year}}, filter={}) {
-        if (year_view === undefined || year !== lastFetchedYear) {
+    function updateDailyView(call, month = {{today.month}}, year = {{today.year}}, refresh=false, filter={}) {
+        if (year_view === undefined || year !== lastFetchedYear || refresh) {
             fetchAllYearlyTasks(call, month, year, filter);
         } else {
             updateViewWithData(call, month, year);
@@ -629,8 +629,8 @@
                 if (data.status == "success") {
                     document.getElementById("closeMoveModal").click();
                     // Refresh the calendar view or update the specific day
-                    updateDailyView(1, new Date(newDate).getMonth() + 1, new Date(newDate).getFullYear());
-                    updateDailyView(2, new Date(newDate).getMonth() + 1, new Date(newDate).getFullYear());
+                    updateDailyView(1, new Date(newDate).getMonth() + 1, new Date(newDate).getFullYear(), refresh=true);
+                    updateDailyView(2, new Date(newDate).getMonth() + 1, new Date(newDate).getFullYear(), refresh=true);
                 } else {
                     alert('Failed to move task: ' + data.error);
                 }
