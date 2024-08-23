@@ -45,13 +45,17 @@ def logout_view(request):
 
 
 @login_required
-def index(request, sample=7):
+def index(request):
     today = date.today()
     formatted_date = today.strftime("Today: %A, %B %d, %Y")
     due_next = {}
+    
+    if request.method == "POST":
+        sample = json.loads(request.body).get("sample", 7)
+    else:
+        sample = request.GET.get("sample", 7)
     for location in request.user.locations.all():
         due_next[str(location)] = location.due_next(sample)
-
     context = {
         "today_date": formatted_date,
         "sample": sample,
@@ -63,6 +67,8 @@ def index(request, sample=7):
         "months": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"],
         "weekdays":["Sunday","Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
     }
+    if request.method == "POST":
+        return JsonResponse({"text":render(request, "test_dates.html", context).content.decode()})
     return render(request, "base.html", context)
 
 
@@ -73,7 +79,7 @@ def yearly_tasks(request):
     data = json.loads(request.body)
     year = data.get('year')
     location_id = data.get('location_id')
-    location = Location.objects.get(id=location_id)
+    location = Location.objects.get(name=location_id)
     tasks = location.this_year_tasks(year)
 
     return JsonResponse({'tasks': tasks, "length":len(tasks)})
@@ -120,11 +126,7 @@ def all_yearly_tasks(request):
     if filt:
         tasks = tasks.filter(**filt)
     unique_locations = list(set(task.location.name for task in tasks))
-    unique_tasks = {}
-    for task in tasks:
-        if task.name not in unique_tasks:
-            unique_tasks[task.name] = []
-        unique_tasks[task.name].append(task.id)
+    unique_tasks = list(set(task.name for task in tasks))
     year_view["unique_locations"] = unique_locations
     year_view["unique_tasks"] = unique_tasks
 

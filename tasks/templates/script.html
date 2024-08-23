@@ -1,8 +1,116 @@
 
 <script>
-    // Add Availability
+    // Test Dates
+    function updateSelectedView(sample = 7) {
+        fetch('/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({"sample": sample})
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Handle the response data here
+            // console.log(data);
+            document.getElementById('test-dates').innerHTML = data.text;
+            var viewText;
+            switch(sample) {
+                case 7:
+                    viewText = "Next 7 days";
+                    break;
+                case 14:
+                    viewText = "Next 14 days";
+                    break;
+                case 28:
+                    viewText = "Next 28 days";
+                    break;
+                default:
+                    viewText = "Overview";
+            }
+            document.getElementById('selected-view').textContent = viewText;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    }    
+    //document.addEventListener('DOMContentLoaded', updateSelectedView);
+    // Sub-view on Test Dates
+    var selectedLocation = ""
+    function fetchYearlyTasks(year, locationId) {
+        fetch('/yearly_tasks/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({"year": year, "location_id": locationId})
+        })
+        .then(response => response.json())
+        .then(data => {
+            const subContainer = document.getElementById('sub_container');
+            const tableBody = subContainer.querySelector('tbody');
+            tableBody.innerHTML = `
+                    <td rowspan=${data.length +1}>${locationId}</td>`; // Clear existing content
+
+            for (const [taskName, taskData] of Object.entries(data.tasks)) {
+                const row = document.createElement('tr');
+                row.innerHTML += `
+                    <td>${Object.keys(data.tasks).indexOf(taskName) + 1}</td>
+                    <td>${taskName}</td>
+                    <td>${getInterval(taskData.frequency)}</td>
+                    ${getMonthCells(taskData.occurences, taskName)}
+                `;
+                
+                tableBody.appendChild(row);
+            }
+
+            // Show sub_container and hide test_dates
+            subContainer.hidden = false;
+            document.getElementById('test_dates').hidden = true;
+            document.getElementById('sample_dropdown').hidden = true;
+            document.getElementById('year_dropdown').hidden = false;
+            document.getElementById('sel_year').textContent = year;
+            document.getElementById('overview_button').hidden = false;
+        });
+        selectedLocation = locationId
+    }
+
+    function getInterval(frequency) {
+        switch(frequency) {
+            case 28: return "Monthly";
+            case 91: return "Quarterly";
+            case 365: return "Yearly";
+            default: return "";
+        }
+    }
+
+    function getMonthCells(occurences, taskName) {
+        const months = [1,2,3,4,5,6,7,8,9,10,11,12];
+        return months.map(month => 
+            `<td>${occurences[month][0] ? occurences[month][0] : ''}</td>`
+        ).join('');
+    }
+    function back_to_overview(){
+        const subContainer = document.getElementById('sub_container');
+        // hide sub_container and show test_dates
+        subContainer.hidden = true;
+        document.getElementById('test_dates').hidden = false;
+        
+        // hide overview_button if it exists
+        const overviewButton = document.getElementById('overview_button');
+        if (overviewButton) {
+            overviewButton.hidden = true;
+        }
+        
+        document.getElementById('sample_dropdown').hidden = false;
+        document.getElementById('year_dropdown').hidden = true;
+    }
+    // Daily Tasks & Availability 
     let year_view;
     let lastFetchedYear;
+    let previousFilter;
     function addAvailability(year, month, day) {
         // Get the date from the datestr
         let date = new Date(Date.UTC(year, month - 1, day));
@@ -180,7 +288,7 @@
         hoursForm.dataset.freetime = freeTime;
         document.getElementById('remove_date').value = datestr;
         //hour input max should be same as free time
-        hoursInput.max = freeTime;
+        // hoursInput.max = freeTime;
         // pop up the modal
         document.getElementById('removeAvailabilityModalLabel').textContent = `Remove Availability from ${datestr}:`;
         document.getElementById('remove_task_list_label').hidden = true;
@@ -306,9 +414,26 @@
             }
         });
     });
+    compareObjects = function(o1, o2){
+        for(var p in o1){
+            if(o1.hasOwnProperty(p)){
+                if(o1[p] !== o2[p]){
+                    return false;
+                }
+            }
+        }
+        for(var p in o2){
+            if(o2.hasOwnProperty(p)){
+                if(o1[p] !== o2[p]){
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
 
     function updateDailyView(call, month = {{today.month}}, year = {{today.year}}, refresh=false, filter={}) {
-        if (year_view === undefined || year !== lastFetchedYear || refresh) {
+        if (year_view === undefined || year !== lastFetchedYear || refresh || !(compareObjects(filter, previousFilter))) {
             fetchAllYearlyTasks(call, month, year, filter);
         } else {
             updateViewWithData(call, month, year);
@@ -328,10 +453,10 @@
         .then(data => {
             year_view = data;
             lastFetchedYear = year;
+            previousFilter = filter;
             updateViewWithData(call, month, year);
         });
     }
-
     function updateViewWithData(call, month, year) {
         const subContainer = document.getElementById('daily_tasks' + call);
         const tableBody = subContainer.querySelector('tbody');
@@ -343,6 +468,24 @@
         if (call == 1) {
             let row = document.createElement('tr');
             row.style.height = '20vh';
+            const tasks = document.getElementById("task_filter_2");
+                tasks.innerHTML = "";
+            Object.entries(year_view.unique_tasks).forEach(([i,task]) => {
+                tasks.innerHTML += `<div class = 'form-check d-flex poppins-regular'>
+                        <input class="form-check-input me-1 px-1" type="checkbox" value="${task}">
+                        <label class="form-check-label">
+                            ${task}
+                        </label></div>`
+            });
+            const locations = document.getElementById("location_filter_2");
+                locations.innerHTML = "";
+            Object.entries(year_view.unique_locations).forEach(([i,task]) => {
+                locations.innerHTML += `<div class = 'ml-2 form-check d-flex poppins-regular'>
+                        <input class="form-check-input me-1 px-1" type="checkbox" value="${task}">
+                        <label class="form-check-label disabled">
+                            ${task}
+                        </label></div>`
+            });
 
             // Add empty cells for days before the 1st of the month
             for (let i = 0; i < dayOfWeek; i++) {
@@ -439,6 +582,12 @@
                     if ( option.getAttribute('data-month') >= {{today.month}}) {
                         option.disabled = false;
                     };
+                    if (parseInt(month) < {{today.month}}) {
+                        month = {{today.month}};
+                        if (option.getAttribute('data-month') == {{today.month}}) {
+                            option.click();
+                        }
+                    }
                 });
             }
             // Get the current date
@@ -509,9 +658,8 @@
                         <p>Make Availability</p>
                         <div class="availability-controls">
                             <div class="hour-adjustments d-flex justify-center">
-                                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addAvailabilityModal" id="plus${dateString}" onclick="addAvailability(year=${year}, month=${month}, day=${day})" >+</button>
-                                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#removeAvailabilityModal" id="minus${dateString}" onclick="removeAvailability(year=${year}, month=${month}, day=${day})">-</button>
-                            </div>
+                                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addAvailabilityModal" id="plus${dateString}" onclick="addAvailability(year=${year}, month=${month}, day=${day})" ${total_work_hours >= 8 ? 'disabled' : ''}>+</button>
+                                <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#removeAvailabilityModal" id="minus${dateString}" onclick="removeAvailability(year=${year}, month=${month}, day=${day})" ${total_work_hours <= 0 ? 'disabled' : ''}>-</button>                            </div>
                         </div>
                         <div id="availability-bars-${dateString}">
                             <p>Availability for Testing: ${total_work_hours} hrs</p>
@@ -556,6 +704,7 @@
     }
     let selectedYear = {{today.year}};
 
+    // Month change functionality on Page 3
     document.addEventListener('DOMContentLoaded', function() {
         const yearDropdown = document.getElementById('year_dropdown2');
         const dropdownMenu = yearDropdown.nextElementSibling;
@@ -572,6 +721,7 @@
             updateDailyView(2, month, selectedYear);        
         });
     });
+    // Month Change functionality on Page 2
     document.addEventListener('DOMContentLoaded', function() {
         const yearDropdown = document.getElementById('year_dropdown1');
         const dropdownMenu = yearDropdown.nextElementSibling;
@@ -588,6 +738,7 @@
             updateDailyView(1, month, selectedYear);
         });
     });
+    // move task functionality
     function moveTask(taskId, taskName, currentDate) {
         const moveTaskForm = document.getElementById('moveTaskForm');
         const taskNameLabel = document.getElementById('task_name');
@@ -646,139 +797,20 @@
                 name__in: []
             };
         
-            document.querySelectorAll('#filterDropdownDailyTasks input[type="checkbox"]:checked').forEach(checkbox => {
+            document.querySelector('#filterDropdownDailyTasks').querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
                 if (checkbox.id.startsWith('location')) {
-                    filters.locations.push(checkbox.value);
+                    filters.location__id__in.push(checkbox.value);
                 } else if (checkbox.id.startsWith('task')) {
-                    filters.task_names.push(checkbox.value);
+                    filters.name__in.push(checkbox.value);
                 }
             });
+            console.log("Filters!")
+            console.log(filters)
         
             updateDailyView(1, {{today.month}}, {{today.year}}, JSON.stringify(filters));
         });
         
     });
-    
-    function updateAvailability(hours, date){
-        fetch("/update_availability", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": '{{ csrf_token }}',
-            },
-            body: JSON.stringify({
-                hours: hours,
-                date: date
-            })
-        }).then(response => response.json()).then(data => {
-            if(data.success){
-                var bar_element = document.getElementById(`availability-bars-${date}`);
-                // total work hours: count the number of orange bars, add hours to it, and save as a var
-                var total_work_hours = Array.from(bar_element.querySelectorAll(".bar.orange")).length + hours;
-                if (total_work_hours == 8) {
-                    // disable the button that has the id plus${date}
-                    document.getElementById(`minus${date}`).disabled = false;
-                    document.getElementById(`plus${date}`).disabled = true;
-                }
-                else if (total_work_hours == 0) {
-                    // disable the button that has the id minus${date}
-                    document.getElementById(`plus${date}`).disabled = false;
-                    document.getElementById(`minus${date}`).disabled = true;
-                }
-                else{
-                    document.getElementById(`plus${date}`).disabled = false;
-                    document.getElementById(`minus${date}`).disabled = false;
-                }
-                if (total_work_hours > 8){
-                    total_work_hours = 8;
-                }
-                if (total_work_hours<0){
-                    total_work_hours = 0;
-                }
-                if (bar_element && 0<=total_work_hours<=8) {
-                    bar_element.innerHTML = `<p>Availability for Testing: ${total_work_hours} hrs</p>
-                    <div class="availability-bars">${Array(total_work_hours).fill('<div class="bar orange"></div>').join('')}
-                                    ${Array(8-total_work_hours).fill('<div class="bar grey"></div>').join('')}</div>`
-                } else {
-                    console.error(`Element with id 'availability-bars-${date}' not found`)
-                }
-                if (data.task_moved){
-                    date = new Date(date);
-                    updateDailyView(1, date.getMonth() + 1, date.getFullYear());
-                    updateDailyView(2, date.getMonth() + 1, date.getFullYear());                    }
-            }
-        })
-        .catch(error => console.log(error))
-    }
-    var selectedLocation = ""
-    function fetchYearlyTasks(year, locationId) {
-        fetch('/yearly_tasks/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token }}'
-            },
-            body: JSON.stringify({"year": year, "location_id": locationId})
-        })
-        .then(response => response.json())
-        .then(data => {
-            const subContainer = document.getElementById('sub_container');
-            const tableBody = subContainer.querySelector('tbody');
-            tableBody.innerHTML = `
-                    <td rowspan=${data.length +1}>${locationId}</td>`; // Clear existing content
 
-            for (const [taskName, taskData] of Object.entries(data.tasks)) {
-                const row = document.createElement('tr');
-                row.innerHTML += `
-                    <td>${Object.keys(data.tasks).indexOf(taskName) + 1}</td>
-                    <td>${taskName}</td>
-                    <td>${getInterval(taskData.frequency)}</td>
-                    ${getMonthCells(taskData.occurences, taskName)}
-                `;
-                
-                tableBody.appendChild(row);
-            }
-
-            // Show sub_container and hide test_dates
-            subContainer.hidden = false;
-            document.getElementById('test_dates').hidden = true;
-            document.getElementById('sample_dropdown').hidden = true;
-            document.getElementById('year_dropdown').hidden = false;
-            document.getElementById('sel_year').textContent = year;
-            document.getElementById('overview_button').hidden = false;
-        });
-        selectedLocation = locationId
-    }
-
-    function getInterval(frequency) {
-        switch(frequency) {
-            case 28: return "Monthly";
-            case 91: return "Quarterly";
-            case 365: return "Yearly";
-            default: return "";
-        }
-    }
-
-    function getMonthCells(occurences, taskName) {
-        const months = [1,2,3,4,5,6,7,8,9,10,11,12];
-        return months.map(month => 
-            `<td>${occurences[month][0] ? occurences[month][0] : ''}</td>`
-        ).join('');
-    }
-    function back_to_overview(){
-        const subContainer = document.getElementById('sub_container');
-        // hide sub_container and show test_dates
-        subContainer.hidden = true;
-        document.getElementById('test_dates').hidden = false;
-        
-        // hide overview_button if it exists
-        const overviewButton = document.getElementById('overview_button');
-        if (overviewButton) {
-            overviewButton.hidden = true;
-        }
-        
-        document.getElementById('sample_dropdown').hidden = false;
-        document.getElementById('year_dropdown').hidden = true;
-    }
 
 </script>

@@ -315,3 +315,6 @@ a:hover {
   font-weight: 600;
   line-height: normal;
 }
+.filterDropdown{
+  width:max-content;
+}

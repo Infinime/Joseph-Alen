@@ -41,20 +41,18 @@
                 <button type="button" class="btn btn-light btn-sm border-dark square-heading me-1vw dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-filter"></i>
                 </button>
-                <div class="dropdown-menu" id="filterDropdownDailyTasks">
+                <div class="dropdown-menu filterDropdown" id="filterDropdownDailyTasks">
                     <h6 class="dropdown-header">Locations</h6>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="{{ location.id }}" id="location{{ location.id }}">
+                    <div class="mx-3" id = "location_filter_2">
+                        {% comment %} <input class="form-check-input" type="checkbox" value="{{ location.id }}" id="location{{ location.id }}">
                         <label class="form-check-label" for="location{{ location.id }}">
                             {{ location.name }}
-                        </label>
+                        </label> {% endcomment %}
                     </div>
                     <h6 class="dropdown-header">Task Names</h6>
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" value="{{ task_name }}" id="task{{ forloop.counter }}">
-                        <label class="form-check-label" for="task{{ forloop.counter }}">
-                            {{ task_name }}
-                        </label>
+                    <div class="mx-3" id = "task_filter_2">
+                        {% comment %} To be populated dynamically {% endcomment %}
+
                     </div>
                     <div class="dropdown-divider"></div>
                     <button class="btn btn-primary btn-sm mx-3" id="applyFiltersDailyTasks">Apply Filters</button>

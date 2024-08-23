@@ -2,3 +2,4 @@ schedulesbackup.zip
 .venv
 .vscode
 *__pycache__
+tasktracker/settings.py

@@ -28,9 +28,9 @@
                     <i class="bi bi-list-ul pe-1"></i><span id="selected-view">Overview</span>
                 </button>
                 <ul class="dropdown-menu">
-                    <li><a class="dropdown-item" href="{% url 'home' sample=7 %}" onclick="updateSelectedView('Next 7 days')">Next 7 days</a></li>
-                    <li><a class="dropdown-item" href="{% url 'home' sample=14 %}" onclick="updateSelectedView('Next 14 days')">Next 2 weeks</a></li>
-                    <li><a class="dropdown-item" href="{% url 'home' sample=28 %}" onclick="updateSelectedView('Next 28 days')">Next 4 weeks</a></li>                </ul>
+                    <li><a class="dropdown-item" onclick="updateSelectedView(7)">Next 7 days</a></li>
+                    <li><a class="dropdown-item" onclick="updateSelectedView(14)">Next 2 weeks</a></li>
+                    <li><a class="dropdown-item" onclick="updateSelectedView(28)">Next 4 weeks</a></li>                </ul>
             </div>
             
             <div class="dropdown me-1vw" hidden id = "year_dropdown">
@@ -43,34 +43,6 @@
                     {%endfor%}           
                 </ul>
             </div>
-            <script>
-                function updateSelectedView(text) {
-                    document.getElementById('selected-view').textContent = text;
-                }
-                
-                function setInitialView() {
-                    var sample = "{{ sample }}";
-                    var viewText;
-                    switch(sample) {
-                        case "7":
-                            viewText = "Next 7 days";
-                            break;
-                        case "14":
-                            viewText = "Next 14 days";
-                            break;
-                        case "28":
-                            viewText = "Next 28 days";
-                            break;
-                        default:
-                            viewText = "Overview";
-                    }
-                    updateSelectedView(viewText);
-                }
-
-
-                document.addEventListener('DOMContentLoaded', setInitialView);
-
-            </script>
             <button type="button" width="2.3vw" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading me-1vw">
                 <i class="bi bi-pencil-square"></i>
             </button>
