@@ -71,7 +71,7 @@
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="addAvailabilityModalLabel">Add Availability</h5>
+                            <h5 class="modal-title" id="addAvailabilityModalLabel">Add Free Time</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
@@ -82,16 +82,16 @@
                                     <input type="date" class="form-control" id="add_date" name="date" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="add_hours" class="form-label">Additional Number of Hours</label>
+                                    <label for="add_hours" class="form-label"></label>
                                     <input type="number" class="form-control" id="add_hours" name="hours" min="1" max="8" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="add_task_list" class="form-label"  id = "add_task_list_label" hidden>Which task(s) from later this week should be moved back to fill this space?</label>
+                                    <label for="add_task_list" class="form-label"  id = "add_task_list_label" hidden>What would you like to do with all that free time?</label>
                                     <div class="form-check" id="add_task_list">
                                         <!-- Checkboxes will be populated dynamically -->
                                     </div>
                                 </div>
-                                <button type="submit" class="btn btn-primary">Save</button>
+                                <button type="submit" class="btn btn-primary">Free It Up!</button>
                             </form>
                         </div>
                     </div>
@@ -102,7 +102,7 @@
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="removeAvailabilityModalLabel">Remove Availability</h5>
+                            <h5 class="modal-title" id="removeAvailabilityModalLabel">Remove Free Time</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
@@ -113,16 +113,16 @@
                                     <input type="date" class="form-control" id="remove_date" name="date" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="remove_hours" class="form-label">Number of Hours to Free Up</label>
+                                    <label for="remove_hours" class="form-label">Number of Hours to Block Up</label>
                                     <input type="number" class="form-control" id="remove_hours" name="hours" min="1" max="8" required>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="remove_task_list" class="form-label" id = "remove_task_list_label" hidden>Which task(s) should be moved to the next available day?</label>
+                                    <label for="remove_task_list" class="form-label" id = "remove_task_list_label" hidden>Getting choked up in here - what tasks should be moved to free up space today?</label>
                                     <div class="form-check" id="remove_task_list">
                                         <!-- Checkboxes will be populated dynamically -->
                                     </div>
                                 </div>
-                                <button type="submit" id="remove-submit" class="btn btn-primary">Save</button>
+                                <button type="submit" id="remove-submit" class="btn btn-primary">Block It Up!</button>
                             </form>
                         </div>
                     </div>

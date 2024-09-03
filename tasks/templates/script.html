@@ -527,8 +527,15 @@
                         taskItem.style.cursor = 'pointer';
                         taskItem.dataset.bsToggle = "modal";
                         taskItem.dataset.bsTarget = "#moveTaskModal";
+                        taskItem.dataset.warning = task.warning;
+                        // if the task has a warning add a warning icon
+                        if (task.warning) {
+                            taskItem.style.fontWeight = 'bold';
+                            taskItem.style.color = 'red';
+                            taskItem.innerHTML += `<i class="bi bi-exclamation-triangle-fill" data-bs-toggle="tooltip" title="${task.warning}"></i>`;
+                        }
                         taskItem.onclick = function() {
-                            moveTask(task.id, task.name, `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`);
+                            moveTask(task.id, task.name, `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`, task.warning);
                         };
 
                         taskList.appendChild(taskItem);
@@ -655,14 +662,14 @@
                     workshiftContainer.innerHTML = `
                         ${dayOfWeek !== 0 && dayOfWeek !== 6 ? `
                         <p>Workshift Length: 8 hrs</p>
-                        <p>Make Availability</p>
+                        <p>Add or Remove Free Time</p>
                         <div class="availability-controls">
                             <div class="hour-adjustments d-flex justify-center">
                                 <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#addAvailabilityModal" id="plus${dateString}" onclick="addAvailability(year=${year}, month=${month}, day=${day})" ${total_work_hours >= 8 ? 'disabled' : ''}>+</button>
                                 <button class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#removeAvailabilityModal" id="minus${dateString}" onclick="removeAvailability(year=${year}, month=${month}, day=${day})" ${total_work_hours <= 0 ? 'disabled' : ''}>-</button>                            </div>
                         </div>
                         <div id="availability-bars-${dateString}">
-                            <p>Availability for Testing: ${total_work_hours} hrs</p>
+                            <p>Free Time for Testing Remaining: ${total_work_hours} hrs</p>
                             <div class="availability-bars">
                                 ${Array(total_work_hours).fill('<div class="bar orange"></div>').join('')}
                                 ${Array(8-total_work_hours).fill('<div class="bar grey"></div>').join('')}
@@ -739,7 +746,7 @@
         });
     });
     // move task functionality
-    function moveTask(taskId, taskName, currentDate) {
+    function moveTask(taskId, taskName, currentDate, warning) {
         const moveTaskForm = document.getElementById('moveTaskForm');
         const taskNameLabel = document.getElementById('task_name');
         const taskIdInput = document.getElementById('task_id_input');

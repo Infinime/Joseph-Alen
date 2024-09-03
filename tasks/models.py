@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from django.db import models
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -8,6 +8,8 @@ from django.dispatch import receiver
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user_profile')
     availability = models.JSONField()
+    safety_buffer_days = models.IntegerField(default=0)
+    show_tooltip = models.BooleanField(default=True)
 
     def __str__(self):
         return self.user.username
@@ -18,8 +20,16 @@ class Task(models.Model):
     frequency = models.IntegerField()
     completion_hrs = models.IntegerField()
     due_date = models.DateField()
+    buffered_date = models.DateField(blank=True, null=True)
     user = models.ForeignKey('auth.User', on_delete=models.CASCADE, related_name='tasks')
     location = models.ForeignKey('Location', on_delete=models.CASCADE, related_name='tasks')
+
+    def save(self, *args, **kwargs):
+        if not self.buffered_date:
+            if self.user.user_profile.safety_buffer_days:
+                self.buffered_date = self.due_date - timedelta(days=self.user.user_profile.safety_buffer_days)
+        super().save(*args, **kwargs)
+
     def next_occurrence(self):
         today = date.today()
         next_date = self.due_date
@@ -32,7 +42,7 @@ class Task(models.Model):
     
         # Check for task clashes and move to the next day if total hours exceed 8
         while True:
-            tasks_on_date = Task.objects.filter(due_date=next_date).exclude(id=self.id)
+            tasks_on_date = Task.objects.filter(buffered_date=next_date - timedelta(days=self.user.user_profile.safety_buffer_days)).exclude(id=self.id)
             tasks_by_location = {}
             for task in tasks_on_date:
                 if task.location not in tasks_by_location:
@@ -40,7 +50,7 @@ class Task(models.Model):
                 tasks_by_location[task.location].append(task)
         
             try:
-                user_availability = self.user.user_profile.availability[next_date.strftime("%Y-%m-%d")]
+                user_availability = self.user.user_profile.availability[(next_date - timedelta(days=self.user.user_profile.safety_buffer_days)).strftime("%Y-%m-%d")]
             except KeyError:
                 user_availability = 0
 
@@ -49,8 +59,30 @@ class Task(models.Model):
             if total_hours <= 8:
                 break
         
+            # Check if this task is lone (no other tasks in the same location on this date)
+            if self.location not in tasks_by_location or len(tasks_by_location[self.location]) == 1:
+                # This task is lone, so we'll try to pair it with tasks from the same location within the week
+                week_start = next_date - timedelta(days=next_date.weekday())
+                week_end = week_start + timedelta(days=6)
+                tasks_in_week = Task.objects.filter(buffered_date__range=[week_start - timedelta(days=self.user.user_profile.safety_buffer_days), week_end - timedelta(days=self.user.user_profile.safety_buffer_days)], location=self.location).exclude(id=self.id)
+                
+                if tasks_in_week.exists():
+                    # Find the day with tasks from the same location that has the least total hours
+                    best_day = None
+                    min_total_hours = float('inf')
+                    for day in (week_start + timedelta(n) for n in range(7)):
+                        day_tasks = tasks_in_week.filter(buffered_date=day - timedelta(days=self.user.user_profile.safety_buffer_days))
+                        day_hours = sum(task.completion_hrs for task in day_tasks) + self.completion_hrs + 1.5
+                        if day_hours < min_total_hours and day_hours <= 8:
+                            min_total_hours = day_hours
+                            best_day = day
+                    
+                    if best_day:
+                        next_date = best_day
+                        continue
+
+            # If we couldn't pair the task or it's not a lone task, move to the next day
             next_date += timedelta(days=1)
-        
     
         # Check for potential past occurrences that are still in the future or today
         potential_date = next_date
@@ -61,8 +93,10 @@ class Task(models.Model):
             else:
                 break
         self.due_date = next_date
+        # self.buffered_date = next_date - timedelta(days=self.user.user_profile.safety_buffer_days)
         self.save()
-        return next_date    
+        return next_date
+
     def all_task_occurences(self, year) -> dict[int, list[date]]:
         today = date.today()
         start_date = date(year, 1, 1)
@@ -99,6 +133,7 @@ class Task(models.Model):
             month = occurrence.month
             occurrences_per_month[month].append(occurrence.strftime('%Y-%m-%d'))                
         return occurrences_per_month
+
     def get_occurrences(self, end_date):
         occurrences = []
         next_date = self.next_occurrence()
@@ -106,12 +141,21 @@ class Task(models.Model):
             occurrences.append(next_date)
             next_date += timedelta(days=self.frequency)
         return occurrences
+
     def json(self):
-        return {"name":self.name, 
+        warning = None
+        if self.due_date and self.user.user_profile.safety_buffer_days:
+            buffered_date = self.due_date - self.user.user_profile.safety_buffer_days
+            if buffered_date - datetime.now().date() < timedelta(days=0):
+                warning = "Task is approaching or past the safety buffer!"
+        
+        return {"name": self.name, 
                 "id": self.id,
-                "location":self.location.name,
-                "milepost":self.location.milepost,
-                "time_taken":self.completion_hrs}
+                "location": self.location.name,
+                "milepost": self.location.milepost,
+                "time_taken": self.completion_hrs,
+                "warning": warning}
+
     def __str__(self):
         return self.name
 

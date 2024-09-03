@@ -23,7 +23,6 @@
             {%endfor%}
         </div>
         <div class="buttons" role="group" aria-label="Task actions">
-
             <div class="dropdown d-inline-block me-1vw">
                 <button type="button" width="2.3vw" id="year_dropdown2" height="2.3vw" class="btn btn-light btn-sm border-dark square-heading dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-list-ul pe-1"></i>{{today.year}}
@@ -41,6 +40,10 @@
                 <i class="bi bi-filter"></i>
             </button>
         </div>
+    </div>
+    <div class="alert alert-info alert-dismissible fade show mt-2" role="alert">
+        These represent potential schedules and are best guesses.
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
     <div class = "secondary mt-1 table-responsive" id = "daily_tasks2">
         <table class="table table-bordered equal-width-columns">

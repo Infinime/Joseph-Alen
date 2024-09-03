@@ -75,7 +75,7 @@ def index(request):
 
 @require_POST
 def yearly_tasks(request):
-    # Yearly tasks per location
+    # Yearly tasks per location for page 1
     data = json.loads(request.body)
     year = data.get('year')
     location_id = data.get('location_id')
@@ -85,6 +85,7 @@ def yearly_tasks(request):
     return JsonResponse({'tasks': tasks, "length":len(tasks)})
 
 def get_next_available_day(request, year_view: dict, year: int, month: int, day: int):
+    # also page 1
     user = request.user.user_profile
     while True:
         day += 1
@@ -98,7 +99,9 @@ def get_next_available_day(request, year_view: dict, year: int, month: int, day:
         current_date = date(year, month, day)
         if current_date.weekday() < 5 and sum(task['time_taken'] for task in year_view[month].get(day, {}).values()) < 8 + availability:
             return month, day
+
 def task_list_week(request):
+    # for remove_availability
     date_str = request.GET.get('date')
     # Convert the date string to a date object
     date_obj = datetime.strptime(date_str, '%Y-%m-%d').date()
@@ -106,12 +109,12 @@ def task_list_week(request):
     start_of_week = date_obj - timedelta(days=date_obj.weekday()+1)
     end_of_week = start_of_week + timedelta(days=6)
 
-    tasks = request.user.tasks.filter(due_date__gt=date_obj).filter(due_date__lte=end_of_week)
+    tasks = request.user.tasks.filter(buffered_date__gt=date_obj).filter(buffered_date__lte=end_of_week)
     [task.next_occurrence() for task in tasks]
     task_list = [{'name': task.name,
                   'time_taken': task.completion_hrs,
                   "location": task.location.name,
-                  "due_date": task.due_date.strftime('%Y-%m-%d'),
+                  "due_date": task.buffered_date.strftime('%Y-%m-%d'),
                   "id": task.id,
                 } for task in tasks]
     return JsonResponse(task_list, safe=False)
@@ -135,11 +138,13 @@ def all_yearly_tasks(request):
         for month in task_occurrences:
             days = task_occurrences[month]
             for i, day_str in enumerate(days):
-                day = datetime.strptime(day_str, "%Y-%m-%d").day
+                buffered_date = datetime.strptime(day_str, "%Y-%m-%d").date()
+                buffered_month = buffered_date.month
+                buffered_day = buffered_date.day
 
-                date_str = f"{year}-{month:02d}-{day:02d}"
+                date_str = f"{year}-{buffered_month:02d}-{buffered_day:02d}"
                 user_availability = request.user.user_profile.availability.get(date_str, 0)
-                current_hours = sum(t['time_taken'] for t in year_view[month].get(day, {}).values())
+                current_hours = sum(t['time_taken'] for t in year_view[buffered_month].get(buffered_day, {}).values())
 
                 # Clip availability to ensure total hours don't exceed 0<=total<=8
                 max_available_hours = 8 - current_hours
@@ -150,19 +155,17 @@ def all_yearly_tasks(request):
 
                 if current_hours + task.completion_hrs > 8:
                     # Find the next available day
-                    month, day = get_next_available_day(request, year_view, year, month, day)
-                    if not (month and day):
+                    buffered_month, buffered_day = get_next_available_day(request, year_view, year, buffered_month, buffered_day)
+                    if not (buffered_month and buffered_day):
                         break
 
-                if day not in year_view[month]:
-                    year_view[month][day] = {1: task.json()}
+                if buffered_day not in year_view[buffered_month]:
+                    year_view[buffered_month][buffered_day] = {1: task.json()}
                 else:
-                    daily_tasks = year_view[month][day]
+                    daily_tasks = year_view[buffered_month][buffered_day]
                     day_arr = list(daily_tasks.values()) + [task.json()]
-                    day_arr.sort(key=lambda x: x["location"])
-                    year_view[month][day] = {_+1: daym for _, daym in enumerate(day_arr)}
-
-
+                    day_arr.sort(key=lambda x: x["milepost"])
+                    year_view[buffered_month][buffered_day] = {_+1: daym for _, daym in enumerate(day_arr)}
     return JsonResponse(year_view)
 
 
@@ -183,7 +186,7 @@ def add_availability(request):
         # Move tasks to the selected date
         for task_id in task_list:
             task = Task.objects.get(id=task_id)
-            task.due_date = datetime.strptime(date, '%Y-%m-%d').date()
+            task.buffered_date = datetime.strptime(date, '%Y-%m-%d').date()
             task.save()
 
         return redirect('home')
@@ -210,9 +213,10 @@ def remove_availability(request):
         
 
         # Populate year_view with tasks
-        for task in request.user.tasks.filter(due_date__year=year):
-            month = task.due_date.month
-            day = task.due_date.day
+        for task in request.user.tasks.filter(buffered_date__year=year):
+            buffered_date = task.buffered_date
+            month = buffered_date.month
+            day = buffered_date.day
             if day not in year_view[month]:
                 year_view[month][day] = {1: task.json()}
             else:
@@ -229,7 +233,7 @@ def remove_availability(request):
             next_month, next_day = get_next_available_day(request, year_view, year, current_month, current_day)
             if next_month and next_day:
                 next_available_date = date(year, next_month, next_day)
-                task.due_date = next_available_date
+                task.buffered_date = next_available_date
                 task.save()
 
         return redirect('home')
@@ -246,7 +250,7 @@ def move_task(request):
             task = Task.objects.get(id=task_id, user=request.user)
             new_date_obj = datetime.strptime(new_date, '%Y-%m-%d').date()
 
-            task.due_date = new_date_obj
+            task.buffered_date = new_date_obj
 
             # Call next_occurrence() method
             task.next_occurrence()
@@ -261,4 +265,3 @@ def move_task(request):
             return JsonResponse({'status': 'error', 'message': 'Invalid JSON'}, status=400)
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
-
